@@ -5,17 +5,40 @@ output: github_document
 
 # Problem 1
 
-This zip file contains data from a longitudinal study that included a control arm and an experimental arm. Data for each participant is included in a separate file, and file names include the subject ID and arm.
-
 ## Tidy Data
-
 Tidy dataframe should include data from all participants, including the subject ID, arm, and observations over time:
-* Start with a dataframe containing all file names; the list.files function will help
-* Iterate over file names and read in data for each subject using  purrr::map and saving the result as a new variable in the dataframe
-* Tidy the result; manipulate file names to include control arm and subject ID, make sure weekly observations are “tidy”, and do any other tidying that’s necessary
+```{r message=FALSE}
+library(tidyverse)
+library(dplyr)
+library(tidyr)
+library(purrr)
+library(readr)
+getwd()
+
+csv_files = dir(path = "/Users/ameliaga/Documents/MPH Sem 3/Data Science/p8105_hw5_ag3911/homework5/", pattern = "*.csv")
+csv_files
+
+vec_csv = str_c(csv_files)
+
+tidy = vec_csv %>%
+  map(read_csv) %>%    
+  reduce(rbind) %>%
+  mutate(arm = 1:20) %>%
+  mutate(ID = 1:20) %>%
+  mutate(arm = as.character(arm)) %>%
+  mutate(arm = if_else(arm == 1:10, "con", "exp")) %>%
+  gather(key = week, value = "observation", week_1:week_8) %>%
+  separate(week, into = c("delete", "week"), sep = "_") %>%  
+  select(-delete) 
+```
 
 ## Plot observations of each subject over time 
 Make a spaghetti plot showing observations on each subject over time, and comment on differences between groups.
+
+tidy %>%
+  group_by(ID)
+  summarize(subject = n_distinct(week))
+  ggplot(aes(x = week, y = observation)) + geom_histogram()
 
 
 
