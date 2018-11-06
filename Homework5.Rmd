@@ -42,16 +42,75 @@ tidy %>%
 
 
 # Problem 2
-The Washington Post has gathered data on homicides in 50 large U.S. cities and made the data available through a GitHub repository here. You can read their accompanying article here.
 
 ## Tidy Data
-* Describe the raw data. 
-* Create a city_state variable (e.g. “Baltimore, MD”). 
-* Summarize within cities to obtain the total number of homicides and the number of unsolved homicides (those for which the disposition is “Closed without arrest” or “Open/No arrest”).
+
+The raw data includes the following information: the case ID number; the date of the homicide; the victim's first name, last name, race, and sex; the location of the homicide by city, state, latitude, and longitude; and the disposition (open/no arrest, closed by arrest, closed without arrest).  
+Create a city_state variable (e.g. “Baltimore, MD”). 
+```{r message=FALSE}
+library(tidyverse)
+library(rvest)
+library(httr)
+library(tidyr)
+library(stringr)
+library(dplyr)
+
+csv = "https://raw.githubusercontent.com/washingtonpost/data-homicides/master/homicide-data.csv"
+
+homic = read_csv(csv)
+
+#CAN'T FIGURE OUT HOW TO COMBINE TWO COLUMNS INTO CITY_STATE!!!!!
+
+gather(key = key, value = percent) %>%
+  separate(key, into = c("age", "year"), sep = "\\(")
+
+homic %>%
+  mutate(city_state = cbind("city", "state"))
+
+bind = cbind("city", "state")
+str_c(bind, collapse = ", ")
+
+unite(homic, city_state, city, state, sep = ", ")[, c(names(homic), "city_state")]
+
+homic %>%
+  mutate(city_state = paste(homic, "city", "state", sep = ", "))
+
+homic %>%
+ unite(city_state, c("city", "state"), sep = ", ")
+homic
+
+homic %>%
+  mutate(city = toString(city)) %>%
+  mutate(state = toString(state)) %>%
+  mutate(city_state = c("city", "state"), sep = ", ") 
+
+homic %>%
+  mutate(city_state = c("city","state"), sep = ", ") 
+
+unite(homic, "city_state", c("city", "state"), remove = TRUE)
+```
+
+Summarize within cities to obtain the total number of homicides and the number of unsolved homicides (those for which the disposition is “Closed without arrest” or “Open/No arrest”).
+
+```{r}
+#Total number of homicides per city
+homic %>%
+  group_by(city) %>%
+  summarise(n = n())
+
+#Number of unsolved homicides per city
+homic %>%
+  filter(disposition == "Closed without arrest" | disposition == "Open/No arrest") %>%
+  group_by(city) %>%
+  summarise(n = n())
+```
 
 ## Estimate proportion of unsolved homicides in Baltimore, MD
 * For the city of Baltimore, MD, use the prop.test function to estimate the proportion of homicides that are unsolved; 
 * save the output of prop.test as an R object, apply the broom::tidy to this object and pull the estimated proportion and confidence intervals from the resulting tidy dataframe.
+
+```{r}
+```
 
 ## Estimate proportion of unsolved homicides in each city 
 * run prop.test for each of the cities in your dataset
@@ -59,8 +118,18 @@ The Washington Post has gathered data on homicides in 50 large U.S. cities and m
 * Do this within a “tidy” pipeline, making use of purrr::map, purrr::map2
 * list columns and unnest as necessary to create a tidy dataframe with estimated proportions and CIs for each city.
 
+```{r}
+homic %>%
+    prop.test(city, p = NULL, alternative = c("two.sided", "less", "greater"), conf.level = 0.95, correct = TRUE)
+```
+
+
 ## Plot estimate and confidence interval for each city's proportion of unsolved homicides
 Create a plot that shows the estimates and CIs for each city
 * check out  geom_errorbar for a way to add error bars based on the upper and lower limits
 * Organize cities according to the proportion of unsolved homicides.
+
+```{r}
+```
+
 
