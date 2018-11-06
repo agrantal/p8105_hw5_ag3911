@@ -34,12 +34,11 @@ tidy = vec_csv %>%
 
 ## Plot observations of each subject over time 
 Make a spaghetti plot showing observations on each subject over time, and comment on differences between groups.
-
+```{r}
+library(ggplot2)
 tidy %>%
-  group_by(ID)
-  summarize(subject = n_distinct(week))
-  ggplot(aes(x = week, y = observation)) + geom_histogram()
-
+  ggplot(aes(x = week, y = observation, group = ID, color = ID)) + geom_line() + labs(title = "Subject Observations over Eight Weeks", color = "Subject ID") + scale_color_gradientn(colours = rainbow(5))
+```
 
 
 # Problem 2
