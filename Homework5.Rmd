@@ -55,61 +55,37 @@ library(tidyr)
 library(stringr)
 library(dplyr)
 
-csv = "https://raw.githubusercontent.com/washingtonpost/data-homicides/master/homicide-data.csv"
-
-homic = read_csv(csv)
-
-#CAN'T FIGURE OUT HOW TO COMBINE TWO COLUMNS INTO CITY_STATE!!!!!
-
-gather(key = key, value = percent) %>%
-  separate(key, into = c("age", "year"), sep = "\\(")
-
-homic %>%
-  mutate(city_state = cbind("city", "state"))
-
-bind = cbind("city", "state")
-str_c(bind, collapse = ", ")
-
-unite(homic, city_state, city, state, sep = ", ")[, c(names(homic), "city_state")]
-
-homic %>%
-  mutate(city_state = paste(homic, "city", "state", sep = ", "))
-
-homic %>%
- unite(city_state, c("city", "state"), sep = ", ")
-homic
-
-homic %>%
-  mutate(city = toString(city)) %>%
-  mutate(state = toString(state)) %>%
-  mutate(city_state = c("city", "state"), sep = ", ") 
-
-homic %>%
-  mutate(city_state = c("city","state"), sep = ", ") 
-
-unite(homic, "city_state", c("city", "state"), remove = TRUE)
+getwd()
+tidy = read_csv("./homicide-data.csv") %>%
+  mutate(city_state = str_c(city, ", ", state))
 ```
 
 Summarize within cities to obtain the total number of homicides and the number of unsolved homicides (those for which the disposition is “Closed without arrest” or “Open/No arrest”).
 
 ```{r}
 #Total number of homicides per city
-homic %>%
-  group_by(city) %>%
+total = tidy %>%
+  group_by(city_state) %>%
   summarise(n = n())
 
 #Number of unsolved homicides per city
-homic %>%
+unsolved = tidy %>%
   filter(disposition == "Closed without arrest" | disposition == "Open/No arrest") %>%
-  group_by(city) %>%
+  group_by(city_state) %>%
   summarise(n = n())
+
+joined = inner_join(unsolved, total, by = "city_state")
 ```
 
 ## Estimate proportion of unsolved homicides in Baltimore, MD
 * For the city of Baltimore, MD, use the prop.test function to estimate the proportion of homicides that are unsolved; 
-* save the output of prop.test as an R object, apply the broom::tidy to this object and pull the estimated proportion and confidence intervals from the resulting tidy dataframe.
+* save the output of prop.test as an R object, apply the broom::tidy to this object and pull the estimated proportion and confidence intervals from the resulting tidy dataframe. 
 
 ```{r}
+baltimore = filter(joined, joined$city_state == "Baltimore, MD") 
+prop_unsolv_baltimore = prop.test(baltimore$n.x, baltimore$n.y) %>%
+  broom::tidy(prop_unsolv_baltimore) %>%
+  select(estimate, conf.low, conf.high)
 ```
 
 ## Estimate proportion of unsolved homicides in each city 
@@ -119,6 +95,21 @@ homic %>%
 * list columns and unnest as necessary to create a tidy dataframe with estimated proportions and CIs for each city.
 
 ```{r}
+all_city_prop = joined %>%
+  mutate(output = map2(.x = n.x, .y = n.y, ~prop.test(.x, .y)))
+all_city_prop
+  
+fun = function(x) {prop.test(x)}
+
+output = map_dfr(tidy, fun, .id = "input")
+
+output = map_dfr(.x = tidy, ~fun(.x))
+
+all_cities = map2(.x = unsolved, .y = total, ~func(arg_1 = .x, arg_2 = .y)
+                  
+.x = unsolved
+.y = total
+
 homic %>%
     prop.test(city, p = NULL, alternative = c("two.sided", "less", "greater"), conf.level = 0.95, correct = TRUE)
 ```
@@ -130,6 +121,7 @@ Create a plot that shows the estimates and CIs for each city
 * Organize cities according to the proportion of unsolved homicides.
 
 ```{r}
+
 ```
 
 
