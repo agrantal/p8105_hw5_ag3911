@@ -78,9 +78,6 @@ joined = inner_join(unsolved, total, by = "city_state")
 ```
 
 ## Estimate proportion of unsolved homicides in Baltimore, MD
-* For the city of Baltimore, MD, use the prop.test function to estimate the proportion of homicides that are unsolved; 
-* save the output of prop.test as an R object, apply the broom::tidy to this object and pull the estimated proportion and confidence intervals from the resulting tidy dataframe. 
-
 ```{r}
 baltimore = filter(joined, joined$city_state == "Baltimore, MD") 
 prop_unsolv_baltimore = prop.test(baltimore$n.x, baltimore$n.y) %>%
@@ -95,23 +92,29 @@ prop_unsolv_baltimore = prop.test(baltimore$n.x, baltimore$n.y) %>%
 * list columns and unnest as necessary to create a tidy dataframe with estimated proportions and CIs for each city.
 
 ```{r}
+library(purrr)
+library(tidyverse)
+
 all_city_prop = joined %>%
-  mutate(output = map2(.x = n.x, .y = n.y, ~prop.test(.x, .y)))
-all_city_prop
+  mutate(output = map2(.x = n.x, .y = n.y, ~prop.test(.x, .y))) 
+
+pull = all_city_prop %>% 
+  pull(output) %>%    #this pulls out estimates, confidence intervals, etc..
+
   
-fun = function(x) {prop.test(x)}
 
-output = map_dfr(tidy, fun, .id = "input")
+#ikd what to do after this point....
 
-output = map_dfr(.x = tidy, ~fun(.x))
+delist = function(df) {
+  lm(conf.int, all_city_prop = df) 
+}
 
-all_cities = map2(.x = unsolved, .y = total, ~func(arg_1 = .x, arg_2 = .y)
-                  
-.x = unsolved
-.y = total
+new = all_city_prop %>%
+  mutate(estimate_conf = map(output, delist))
 
-homic %>%
-    prop.test(city, p = NULL, alternative = c("two.sided", "less", "greater"), conf.level = 0.95, correct = TRUE)
+map(all_city_prop$output, ~lm(estimate ~ conf.int, output = .x))
+
+all_city
 ```
 
 
