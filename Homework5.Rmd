@@ -55,7 +55,7 @@ library(stringr)
 library(dplyr)
 
 getwd()
-tidy = read_csv("./homicide-data.csv") %>%
+tidy = read_csv("./data/homicide-data.csv") %>%
   mutate(city_state = str_c(city, ", ", state))
 ```
 
@@ -94,27 +94,38 @@ prop_unsolv_baltimore = prop.test(baltimore$n.x, baltimore$n.y) %>%
 library(purrr)
 library(tidyverse)
 
-all_city_prop = joined %>%
-  mutate(output = map2(.x = n.x, .y = n.y, ~prop.test(.x, .y))) %>%
-  broom::tidy(prop_unsolv_baltimore) %>%
-  select(estimate, conf.low, conf.high)
-pull = all_city_prop %>% 
-  pull(output) %>%    #this pulls out estimates, confidence intervals, etc..
-
-  
-
-#ikd what to do after this point....
-
-delist = function(df) {
-  lm(conf.int, all_city_prop = df) 
+fun = function(df) {
+  prop.test(n.x ~ n.y, joined = df), 
 }
 
-new = all_city_prop %>%
-  mutate(estimate_conf = map(output, delist))
+##the following is the closest option yet:
+all_city_prop = joined %>%
+  mutate(output = map2(.x = n.x, .y = n.y, ~prop.test(.x, .y))) %>%
+  broom::tidy(all_city_prop)
 
-map(all_city_prop$output, ~lm(estimate ~ conf.int, output = .x))
+out = all_city_prop %>%
+  pull(output) %>%
+  reduce(cbind)
+out
 
-all_city
+
+
+
+  #select(estimate, conf.int) #I get error "C stack usage 7970144 is too close to the limit"
+all_city_prop
+
+new = all_city_prop %>% 
+  pull(output) %>%
+  reduce(cbind) %>%
+  unnest(output)
+  select(estimate)      #this gives a list of 450 with no obs/var labels..ughhh
+  filter(   )          #try to select the 4th and 6th value in each 9-item-long list  
+  #reduce(cbind) #this further orders it but in a more confusing way that makes it almost impossible to select from 
+
+
+
+###idk what to do!!!
+
 ```
 
 
