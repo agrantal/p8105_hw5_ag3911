@@ -85,46 +85,18 @@ prop_unsolv_baltimore = prop.test(baltimore$n.x, baltimore$n.y) %>%
 ```
 
 ## Estimate proportion of unsolved homicides in each city 
-* run prop.test for each of the cities in your dataset
-* extract both the proportion of unsolved homicides and the confidence interval for each
-* Do this within a “tidy” pipeline, making use of purrr::map, purrr::map2
-* list columns and unnest as necessary to create a tidy dataframe with estimated proportions and CIs for each city.
-
 ```{r}
 library(purrr)
 library(tidyverse)
+library(broom)
 
-fun = function(df) {
-  prop.test(n.x ~ n.y, joined = df), 
-}
-
-##the following is the closest option yet:
 all_city_prop = joined %>%
-  mutate(output = map2(.x = n.x, .y = n.y, ~prop.test(.x, .y))) %>%
-  broom::tidy(all_city_prop)
+  mutate(output = map2(.x = n.x, .y = n.y, ~prop.test(.x, .y) %>%
+                    broom::tidy(all_city_prop) %>%
+                    select(estimate, conf.high, conf.low))) %>%    
+                    unnest()
 
-out = all_city_prop %>%
-  pull(output) %>%
-  reduce(cbind)
-out
-
-
-
-
-  #select(estimate, conf.int) #I get error "C stack usage 7970144 is too close to the limit"
-all_city_prop
-
-new = all_city_prop %>% 
-  pull(output) %>%
-  reduce(cbind) %>%
-  unnest(output)
-  select(estimate)      #this gives a list of 450 with no obs/var labels..ughhh
-  filter(   )          #try to select the 4th and 6th value in each 9-item-long list  
-  #reduce(cbind) #this further orders it but in a more confusing way that makes it almost impossible to select from 
-
-
-
-###idk what to do!!!
+##rename columns
 
 ```
 
