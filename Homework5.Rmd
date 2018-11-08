@@ -13,15 +13,14 @@ library(dplyr)
 library(tidyr)
 library(purrr)
 library(readr)
+library(data.table)
 getwd()
 
-csv_files = dir(path = "/Users/ameliaga/Documents/MPH Sem 3/Data Science/p8105_hw5_ag3911/homework5/", pattern = "*.csv")
+csv_files = list.files(path = ".", pattern = "*.csv")
 csv_files
-
-vec_csv = str_c(csv_files)
-
-tidy = vec_csv %>%
-  map(read_csv) %>%    
+p1 = csv_files %>%
+  map(read_csv) %>%
+  janitor::clean_names() %>%
   reduce(rbind) %>%
   mutate(arm = 1:20) %>%
   mutate(ID = 1:20) %>%
@@ -36,7 +35,7 @@ tidy = vec_csv %>%
 Make a spaghetti plot showing observations on each subject over time, and comment on differences between groups.
 ```{r}
 library(ggplot2)
-tidy %>%
+p1 %>%
   ggplot(aes(x = week, y = observation, group = ID, color = ID)) + geom_line() + labs(title = "Subject Observations over Eight Weeks", color = "Subject ID") + scale_color_gradientn(colours = rainbow(5))
 ```
 
@@ -96,8 +95,9 @@ library(purrr)
 library(tidyverse)
 
 all_city_prop = joined %>%
-  mutate(output = map2(.x = n.x, .y = n.y, ~prop.test(.x, .y))) 
-
+  mutate(output = map2(.x = n.x, .y = n.y, ~prop.test(.x, .y))) %>%
+  broom::tidy(prop_unsolv_baltimore) %>%
+  select(estimate, conf.low, conf.high)
 pull = all_city_prop %>% 
   pull(output) %>%    #this pulls out estimates, confidence intervals, etc..
 
