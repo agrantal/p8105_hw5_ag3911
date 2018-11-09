@@ -96,18 +96,21 @@ all_city_prop = joined %>%
                     select(estimate, conf.high, conf.low))) %>%    
                     unnest()
 
-##rename columns
+##rename columns?
 
 ```
 
 
 ## Plot estimate and confidence interval for each city's proportion of unsolved homicides
-Create a plot that shows the estimates and CIs for each city
-* check out  geom_errorbar for a way to add error bars based on the upper and lower limits
-* Organize cities according to the proportion of unsolved homicides.
-
 ```{r}
+library(ggplot2)
 
+plot = all_city_prop %>%
+  group_by(city_state) %>%
+  #mutate(estimate = as.numeric(estimate)) %>%
+  #arrange(city_state, desc(estimate)) %>%
+  ggplot(aes(x = reorder(city_state, -estimate) , y = estimate)) + geom_errorbar(aes(ymin = conf.low, ymax = conf.high, width = 0.2)) + geom_point() + labs(x = "Location", y = "Proportion (out of 1)", title = "Proportion of Unsolved Homicides by City, State") + theme(axis.text.x = element_text(angle = 90))
+plot
 ```
 
 
